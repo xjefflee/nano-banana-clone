@@ -5,11 +5,11 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🍌</span>
-            <span className="text-xl font-bold">Nano Banana</span>
+            <span className="text-xl font-bold">Nano Banano</span>
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Nano Banana. All rights reserved.
+            © {new Date().getFullYear()} Nano Banano. All rights reserved.
           </p>
 
           <div className="flex items-center gap-6">

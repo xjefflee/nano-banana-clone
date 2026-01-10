@@ -29,11 +29,11 @@ export default function Home() {
             </div>
 
             <h1 className="mb-6 text-balance font-sans text-5xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-              Nano Banana
+              Nano Banano
             </h1>
 
             <p className="mx-auto mb-8 max-w-3xl text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Transform any image with simple text prompts. Nano Banana's advanced model delivers consistent character
+              Transform any image with simple text prompts. Nano Banano's advanced model delivers consistent character
               editing and scene preservation that surpasses Flux Kontext. Experience the future of AI image editing.
             </p>
 
@@ -73,7 +73,7 @@ export default function Home() {
               Get Started
             </h2>
             <p className="text-lg text-muted-foreground">
-              Experience the power of Nano Banana's natural language image editing
+              Experience the power of Nano Banano's natural language image editing
             </p>
           </div>
 
