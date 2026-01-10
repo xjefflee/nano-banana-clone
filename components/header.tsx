@@ -64,19 +64,22 @@ export function Header() {
           </div>
 
           <nav className="hidden items-center gap-6 md:flex">
-            <a href="#generator" className="text-sm font-medium transition-colors hover:text-yellow-500">
+            <a href="/#generator" className="text-sm font-medium transition-colors hover:text-yellow-500">
               Generator
             </a>
-            <a href="#features" className="text-sm font-medium transition-colors hover:text-yellow-500">
+            <a href="/#features" className="text-sm font-medium transition-colors hover:text-yellow-500">
               Features
             </a>
-            <a href="#showcase" className="text-sm font-medium transition-colors hover:text-yellow-500">
+            <a href="/pricing" className="text-sm font-medium transition-colors hover:text-yellow-500">
+              Pricing
+            </a>
+            <a href="/#showcase" className="text-sm font-medium transition-colors hover:text-yellow-500">
               Showcase
             </a>
-            <a href="#reviews" className="text-sm font-medium transition-colors hover:text-yellow-500">
+            <a href="/#reviews" className="text-sm font-medium transition-colors hover:text-yellow-500">
               Reviews
             </a>
-            <a href="#faq" className="text-sm font-medium transition-colors hover:text-yellow-500">
+            <a href="/#faq" className="text-sm font-medium transition-colors hover:text-yellow-500">
               FAQ
             </a>
           </nav>
@@ -137,19 +140,22 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="border-t border-border py-4 md:hidden">
             <nav className="flex flex-col gap-4">
-              <a href="#generator" className="text-sm font-medium">
+              <a href="/#generator" className="text-sm font-medium">
                 Generator
               </a>
-              <a href="#features" className="text-sm font-medium">
+              <a href="/#features" className="text-sm font-medium">
                 Features
               </a>
-              <a href="#showcase" className="text-sm font-medium">
+              <a href="/pricing" className="text-sm font-medium">
+                Pricing
+              </a>
+              <a href="/#showcase" className="text-sm font-medium">
                 Showcase
               </a>
-              <a href="#reviews" className="text-sm font-medium">
+              <a href="/#reviews" className="text-sm font-medium">
                 Reviews
               </a>
-              <a href="#faq" className="text-sm font-medium">
+              <a href="/#faq" className="text-sm font-medium">
                 FAQ
               </a>
             </nav>
