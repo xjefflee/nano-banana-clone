@@ -63,11 +63,13 @@ export async function POST(request: NextRequest) {
 
     // Create checkout session
     const session = await createCheckoutSession({
-      productId,
-      mode: type === 'subscription' ? 'subscription' : 'payment',
-      successUrl: `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/pricing`,
-      customerEmail: user?.email,
+      product_id: productId,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
+      ...(user?.email && {
+        customer: {
+          email: user.email,
+        },
+      }),
       metadata: {
         userId: user?.id || '',
         planName: planName || '',
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ url: session.url, sessionId: session.id })
+    return NextResponse.json({ url: session.checkout_url, sessionId: session.id })
   } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(

@@ -85,6 +85,8 @@ export default function PricingPage() {
 
   const handleSubscribe = async (planName: string, isYearly: boolean) => {
     try {
+      console.log('Creating checkout session for:', planName, isYearly ? 'yearly' : 'monthly')
+
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,11 +98,17 @@ export default function PricingPage() {
       })
 
       const data = await response.json()
+      console.log('Checkout API response:', data)
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create checkout session')
       }
 
+      if (!data.url) {
+        throw new Error('No checkout URL returned from API')
+      }
+
+      console.log('Redirecting to:', data.url)
       // Redirect to Creem checkout
       window.location.href = data.url
     } catch (error) {
@@ -111,6 +119,8 @@ export default function PricingPage() {
 
   const handleBuyCredits = async (credits: number) => {
     try {
+      console.log('Creating checkout session for credits:', credits)
+
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,11 +131,17 @@ export default function PricingPage() {
       })
 
       const data = await response.json()
+      console.log('Checkout API response:', data)
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create checkout session')
       }
 
+      if (!data.url) {
+        throw new Error('No checkout URL returned from API')
+      }
+
+      console.log('Redirecting to:', data.url)
       // Redirect to Creem checkout
       window.location.href = data.url
     } catch (error) {

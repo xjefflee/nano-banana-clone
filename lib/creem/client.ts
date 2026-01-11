@@ -4,18 +4,17 @@
  */
 
 export interface CheckoutSessionParams {
-  productId?: string
-  priceId?: string
-  mode: 'payment' | 'subscription'
-  successUrl: string
-  cancelUrl: string
-  customerEmail?: string
+  product_id: string
+  success_url: string
+  customer?: {
+    email: string
+  }
   metadata?: Record<string, string>
 }
 
 export interface CheckoutSessionResponse {
   id: string
-  url: string
+  checkout_url: string
   status: string
 }
 
@@ -43,10 +42,13 @@ export async function createCheckoutSession(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Unknown error' }))
+    console.error('Creem API Error Response:', error)
     throw new Error(`Creem API Error: ${error.message || response.statusText}`)
   }
 
-  return response.json()
+  const data = await response.json()
+  console.log('Creem API Success Response:', data)
+  return data
 }
 
 /**

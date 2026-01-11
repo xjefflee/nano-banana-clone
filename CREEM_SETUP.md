@@ -124,57 +124,57 @@ CREEM_PRODUCT_CREDITS_50000=prod_xxxxx
 2. Click **Add Webhook Endpoint**
 3. Enter your webhook URL:
    - Production: `https://yourdomain.com/api/webhooks/creem`
-   - Development: Use a service like ngrok to expose localhost
+   - Development: Use ngrok or similar service (e.g., `https://yessenia-arborescent-apollo.ngrok-free.dev/api/webhooks/creem`)
 4. Select the following events to listen to:
-   - `checkout.completed`
-   - `subscription.created`
-   - `subscription.updated`
-   - `subscription.cancelled`
-   - `payment.succeeded`
-   - `payment.failed`
-5. Save the webhook
+   - `checkout.completed` - One-time payment completion
+   - `subscription.active` - Subscription activated
+   - `subscription.trialing` - Subscription in trial period
+   - `subscription.canceled` - Subscription canceled
+   - `subscription.expired` - Subscription expired
+5. Copy the **Webhook Secret** from Creem dashboard
+6. Add it to your `.env.local`:
+   ```bash
+   CREEM_WEBHOOK_SECRET=your_webhook_secret_here
+   ```
+7. Save the webhook
 
-## Step 5: Database Setup (Optional)
+**Note**: The webhook handler includes HMAC-SHA256 signature verification for security.
 
-You may want to create database tables to track:
+## Step 5: Database Setup (Required)
 
-### User Credits Table
-```sql
-CREATE TABLE user_credits (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id),
-  credits INTEGER NOT NULL DEFAULT 0,
-  session_id TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
+Database tables are required for the webhook handlers to function properly.
 
-### User Subscriptions Table
-```sql
-CREATE TABLE user_subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id),
-  subscription_id TEXT UNIQUE NOT NULL,
-  plan_name TEXT NOT NULL,
-  status TEXT NOT NULL,
-  current_period_start TIMESTAMP WITH TIME ZONE,
-  current_period_end TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
+### Run the Migration
 
-### Payments Table
-```sql
-CREATE TABLE payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  payment_id TEXT UNIQUE NOT NULL,
-  user_id UUID REFERENCES auth.users(id),
-  amount DECIMAL(10, 2) NOT NULL,
-  status TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
+A complete migration file has been created at `supabase/migrations/20260111_create_payment_tables.sql`.
+
+To apply the migration:
+
+1. **Using Supabase CLI** (recommended):
+   ```bash
+   supabase db push
+   ```
+
+2. **Using Supabase Dashboard**:
+   - Go to your Supabase project
+   - Navigate to SQL Editor
+   - Copy the contents of `supabase/migrations/20260111_create_payment_tables.sql`
+   - Execute the SQL
+
+### What Gets Created
+
+The migration creates:
+
+1. **`user_profiles` table**: Stores user credit balances
+2. **`user_subscriptions` table**: Tracks subscription status and billing periods
+3. **Indexes**: For optimized queries
+4. **Row Level Security (RLS)**: Secure data access policies
+5. **Triggers**: Auto-create user profiles on signup
+6. **Functions**: Helper functions for credit management
+
+### Manual Creation (Alternative)
+
+If you prefer to create tables manually, see the SQL schemas in the migration file.
 
 ## Step 6: Test the Integration
 
@@ -207,8 +207,10 @@ pnpm dev
 ### Webhooks not working
 - Make sure your webhook URL is accessible from the internet
 - Use ngrok for local development: `ngrok http 3000`
-- Check webhook signature validation (if implemented)
+- Verify `CREEM_WEBHOOK_SECRET` is set in `.env.local`
+- Check webhook signature validation in server logs
 - Verify the correct events are selected in Creem dashboard
+- Check that the webhook endpoint returns 200 OK for test events
 
 ## Production Deployment
 
@@ -224,6 +226,7 @@ Before deploying to production:
 ## Security Notes
 
 - Never commit `.env.local` to version control
-- Keep your `CREEM_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` secret
-- Validate webhook signatures in production (implement in webhook handler)
+- Keep your `CREEM_API_KEY`, `CREEM_WEBHOOK_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` secret
+- Webhook signatures are validated using HMAC-SHA256 (already implemented)
 - Use HTTPS for all production endpoints
+- Row Level Security (RLS) is enabled on all database tables

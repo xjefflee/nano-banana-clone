@@ -39,13 +39,26 @@ Features:
 - Supports both subscription and one-time payment modes
 - Includes success/cancel URL configuration
 
-#### Webhook Event Handlers
-- `checkout.completed`
-- `subscription.created`
-- `subscription.updated`
-- `subscription.cancelled`
-- `payment.succeeded`
-- `payment.failed`
+#### Webhook Event Handlers (Fully Implemented)
+
+The webhook handler at `/api/webhooks/creem/route.ts` includes:
+
+**Security Features:**
+- HMAC-SHA256 signature verification
+- Request signature validation using `creem-signature` header
+- Service role authentication for database operations
+
+**Supported Events:**
+- `checkout.completed` - Adds credits to user balance for one-time purchases
+- `subscription.active` - Activates user subscription with billing period tracking
+- `subscription.trialing` - Handles trial period subscriptions
+- `subscription.canceled` - Updates subscription status to canceled
+- `subscription.expired` - Marks subscription as expired
+
+**Database Integration:**
+- Automatic credit balance updates in `user_profiles` table
+- Subscription management in `user_subscriptions` table
+- Full audit trail with timestamps
 
 ### 3. Navigation Updates
 
@@ -65,10 +78,13 @@ app/
   api/
     checkout/route.ts           # Checkout session creation API
     webhooks/
-      creem/route.ts           # Webhook handler for Creem events
+      creem/route.ts           # Webhook handler with signature verification
 lib/
   creem/
     client.ts                   # Creem API client utilities
+supabase/
+  migrations/
+    20260111_create_payment_tables.sql  # Database schema for payments
 CREEM_SETUP.md                  # Comprehensive setup guide
 .env.example                    # Environment variable template
 ```
@@ -102,6 +118,7 @@ Add to `.env.local`:
 # Creem Configuration
 CREEM_API_KEY=your_creem_api_key
 CREEM_API_URL=https://api.creem.io
+CREEM_WEBHOOK_SECRET=your_creem_webhook_secret
 
 # Product IDs (from Creem dashboard)
 CREEM_PRODUCT_BASIC_MONTHLY=prod_xxxxx
@@ -122,17 +139,29 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 ### 4. Set Up Webhooks
 Configure webhook endpoint in Creem dashboard:
-- URL: `https://yourdomain.com/api/webhooks/creem`
-- Events: All payment and subscription events
+- URL: `https://yourdomain.com/api/webhooks/creem` (or ngrok URL for development)
+- Events: `checkout.completed`, `subscription.active`, `subscription.trialing`, `subscription.canceled`, `subscription.expired`
+- Copy webhook secret to `CREEM_WEBHOOK_SECRET` environment variable
+- Webhook handler includes automatic signature verification
 
-### 5. Database Setup (Optional but Recommended)
+### 5. Database Setup (Required)
 
-Create tables to track:
-- `user_credits`: Track user credit balances
-- `user_subscriptions`: Manage subscription status
-- `payments`: Record payment history
+Apply the database migration:
 
-See `CREEM_SETUP.md` for SQL schema examples.
+```bash
+# Using Supabase CLI
+supabase db push
+
+# Or via Supabase Dashboard SQL Editor
+# Execute: supabase/migrations/20260111_create_payment_tables.sql
+```
+
+This creates:
+- `user_profiles` table: Stores user credit balances
+- `user_subscriptions` table: Manages subscription status and billing periods
+- RLS policies: Secure data access
+- Triggers: Auto-create profiles on signup
+- Helper functions: Credit management utilities
 
 ## Testing the Implementation
 
@@ -156,12 +185,14 @@ See `CREEM_SETUP.md` for SQL schema examples.
 
 To fully activate the payment system:
 
-1. **Complete Creem Setup**: Follow `CREEM_SETUP.md`
-2. **Create Database Tables**: Implement user credit and subscription tracking
-3. **Implement Credit System**: Add logic to deduct credits when generating images
-4. **User Dashboard**: Create a page for users to view their credits and subscription
-5. **Email Notifications**: Set up confirmation and receipt emails
-6. **Testing**: Use Creem test mode before going live
+1. ✅ **Webhook Handler**: Implemented with signature verification and database integration
+2. ✅ **Database Schema**: Migration file created with complete table structure
+3. **Complete Creem Setup**: Follow `CREEM_SETUP.md` to configure products
+4. **Apply Database Migration**: Run the SQL migration in your Supabase project
+5. **Implement Credit System**: Add logic to deduct credits when generating images
+6. **User Dashboard**: Create a page for users to view their credits and subscription
+7. **Email Notifications**: Set up confirmation and receipt emails
+8. **Testing**: Use Creem test mode before going live
 
 ## Design Notes
 
@@ -175,10 +206,12 @@ The pricing page follows the site's design language:
 
 ## Security Considerations
 
-- API keys are server-side only (never exposed to client)
-- Webhook signature validation recommended for production
-- User authentication required for checkout (via Supabase)
-- All checkout sessions include user metadata for tracking
+- ✅ API keys are server-side only (never exposed to client)
+- ✅ Webhook signature validation implemented using HMAC-SHA256
+- ✅ User authentication required for checkout (via Supabase)
+- ✅ All checkout sessions include user metadata for tracking
+- ✅ Row Level Security (RLS) enabled on all database tables
+- ✅ Service role key used for secure database operations in webhooks
 - HTTPS required for production webhooks
 
 ## Documentation

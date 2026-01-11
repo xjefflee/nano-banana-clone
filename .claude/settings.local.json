@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(pnpm build:*)",
+      "Bash(node test-checkout.js:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm dev)",
+      "Bash(cat:*)"
     ]
   }
 }
