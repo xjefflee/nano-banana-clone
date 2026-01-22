@@ -13,31 +13,37 @@ function SuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const sessionId = searchParams.get('session_id')
+  const orderId = searchParams.get('order_id') || searchParams.get('token')
 
   useEffect(() => {
-    // Verify the session and update user credits/subscription
-    const verifySession = async () => {
-      if (!sessionId) {
+    // Verify the order and update user credits/subscription
+    const verifyOrder = async () => {
+      if (!orderId) {
         setLoading(false)
         return
       }
 
       try {
-        // You can optionally verify the session with your backend
-        // const response = await fetch(`/api/checkout/verify?session_id=${sessionId}`)
-        // const data = await response.json()
+        // Capture the PayPal order
+        const response = await fetch('/api/checkout/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+        })
 
-        // For now, just mark as loaded
+        if (response.ok) {
+          console.log('Order captured successfully')
+        }
+
         setTimeout(() => setLoading(false), 1000)
       } catch (error) {
-        console.error('Error verifying session:', error)
+        console.error('Error capturing order:', error)
         setLoading(false)
       }
     }
 
-    verifySession()
-  }, [sessionId])
+    verifyOrder()
+  }, [orderId])
 
   if (loading) {
     return (
@@ -66,9 +72,9 @@ function SuccessContent() {
               <p className="text-muted-foreground">
                 Your payment has been processed successfully. Your credits or subscription has been activated.
               </p>
-              {sessionId && (
+              {orderId && (
                 <p className="text-xs text-muted-foreground font-mono">
-                  Session ID: {sessionId}
+                  Order ID: {orderId}
                 </p>
               )}
             </div>

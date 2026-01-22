@@ -6,7 +6,14 @@
       "Bash(node test-checkout.js:*)",
       "Bash(curl:*)",
       "Bash(pnpm dev)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm add:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs ps:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(xargs kill:*)"
     ]
   }
 }

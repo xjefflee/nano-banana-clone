@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCheckoutSession } from '@/lib/creem/client'
+import { createPayPalOrder } from '@/lib/paypal/client'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
@@ -13,76 +13,71 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Map plan names to product IDs (you'll need to create these in Creem dashboard)
-    const productMap: Record<string, { monthly: string; yearly: string }> = {
+    // Map plan names to prices
+    const subscriptionPrices: Record<string, { monthly: number; yearly: number }> = {
       Basic: {
-        monthly: process.env.CREEM_PRODUCT_BASIC_MONTHLY || '',
-        yearly: process.env.CREEM_PRODUCT_BASIC_YEARLY || '',
+        monthly: 12,
+        yearly: 144,
       },
       Pro: {
-        monthly: process.env.CREEM_PRODUCT_PRO_MONTHLY || '',
-        yearly: process.env.CREEM_PRODUCT_PRO_YEARLY || '',
+        monthly: 19.5,
+        yearly: 234,
       },
       Max: {
-        monthly: process.env.CREEM_PRODUCT_MAX_MONTHLY || '',
-        yearly: process.env.CREEM_PRODUCT_MAX_YEARLY || '',
+        monthly: 80,
+        yearly: 960,
       },
     }
 
-    // Map credit packs to product IDs
-    const creditPackMap: Record<number, string> = {
-      1000: process.env.CREEM_PRODUCT_CREDITS_1000 || '',
-      5000: process.env.CREEM_PRODUCT_CREDITS_5000 || '',
-      10000: process.env.CREEM_PRODUCT_CREDITS_10000 || '',
-      50000: process.env.CREEM_PRODUCT_CREDITS_50000 || '',
+    // Map credit packs to prices
+    const creditPackPrices: Record<number, number> = {
+      1000: 10,
+      5000: 45,
+      10000: 80,
+      50000: 350,
     }
 
-    let productId: string
+    let amount: number
+    let description: string
 
     if (type === 'subscription') {
-      const plan = productMap[planName as keyof typeof productMap]
+      const plan = subscriptionPrices[planName as keyof typeof subscriptionPrices]
       if (!plan) {
         return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
       }
-      productId = billingCycle === 'yearly' ? plan.yearly : plan.monthly
+      amount = billingCycle === 'yearly' ? plan.yearly : plan.monthly
+      description = `Nano Banano ${planName} Plan - ${billingCycle === 'yearly' ? 'Yearly' : 'Monthly'} Subscription`
     } else if (type === 'credits') {
-      productId = creditPackMap[credits as keyof typeof creditPackMap]
-      if (!productId) {
+      amount = creditPackPrices[credits as keyof typeof creditPackPrices]
+      if (!amount) {
         return NextResponse.json({ error: 'Invalid credit pack' }, { status: 400 })
       }
+      description = `Nano Banano - ${credits} Credits Pack`
     } else {
       return NextResponse.json({ error: 'Invalid checkout type' }, { status: 400 })
     }
 
-    if (!productId) {
-      return NextResponse.json(
-        { error: 'Product not configured. Please set up Creem product IDs in environment variables.' },
-        { status: 500 }
-      )
-    }
-
-    // Create checkout session
-    const session = await createCheckoutSession({
-      product_id: productId,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
-      ...(user?.email && {
-        customer: {
-          email: user.email,
-        },
-      }),
+    // Create PayPal order
+    const order = await createPayPalOrder({
+      amount: amount.toString(),
+      currency: 'USD',
+      description,
       metadata: {
         userId: user?.id || '',
         planName: planName || '',
         billingCycle: billingCycle || '',
         credits: credits?.toString() || '',
+        type,
       },
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/pricing/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/pricing`,
     })
 
-    return NextResponse.json({ url: session.checkout_url, sessionId: session.id })
+    return NextResponse.json({ url: order.approval_url, orderId: order.id })
   } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create checkout session' },
+      { error: error instanceof Error ? error.message : 'Failed to create PayPal order' },
       { status: 500 }
     )
   }

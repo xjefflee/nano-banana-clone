@@ -109,7 +109,7 @@ export default function PricingPage() {
       }
 
       console.log('Redirecting to:', data.url)
-      // Redirect to Creem checkout
+      // Redirect to PayPal checkout
       window.location.href = data.url
     } catch (error) {
       console.error('Checkout error:', error)
@@ -142,7 +142,7 @@ export default function PricingPage() {
       }
 
       console.log('Redirecting to:', data.url)
-      // Redirect to Creem checkout
+      // Redirect to PayPal checkout
       window.location.href = data.url
     } catch (error) {
       console.error('Checkout error:', error)
